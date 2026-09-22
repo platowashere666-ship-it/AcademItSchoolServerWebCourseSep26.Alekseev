@@ -1,37 +1,37 @@
 package academits.ru.excel;
 
 import org.apache.poi.ss.usermodel.*;
-import org.apache.poi.xssf.usermodel.XSSFCellStyle;
 import org.apache.poi.xssf.usermodel.XSSFColor;
-import org.apache.poi.xssf.usermodel.XSSFFont;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
+import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class Main {
-    public static void main(String[] args) throws IOException {
-        List<Person> persons = new ArrayList<>();
-        persons.add(new Person("Шестяков", "Владимир", 32, "+79323344343"));
-        persons.add(new Person("Хаметова", "Милана", 23, "+79323344332"));
-        persons.add(new Person("Непомнящий", "Роман", 19, "+79323345723"));
-        persons.add(new Person("Шнуров", "Алексей", 25, "+79323349865"));
-        persons.add(new Person("Морозов", "Игорь", 40, "+79323342345"));
+    public static void main(String[] args) {
+        List<Person> persons = Arrays.asList(
+                new Person("Шестяков", "Владимир", 32, "+79323344343"),
+                new Person("Хаметова", "Милана", 23, "+79323344332"),
+                new Person("Непомнящий", "Роман", 19, "+79323345723"),
+                new Person("Шнуров", "Алексей", 25, "+79323349865"),
+                new Person("Морозов", "Игорь", 40, "+79323342345")
+        );
 
         try (Workbook workbook = new XSSFWorkbook();
-             FileOutputStream outputStream = new FileOutputStream("contacts.xlsx")) {
+             BufferedOutputStream outputStream = new BufferedOutputStream(new FileOutputStream("contacts.xlsx"))) {
             Sheet sheet = workbook.createSheet("Контакты");
 
-            XSSFCellStyle headerStyle = (XSSFCellStyle) workbook.createCellStyle();
-            XSSFFont headerFont = (XSSFFont) workbook.createFont();
+            CellStyle headerStyle = workbook.createCellStyle();
+            Font headerFont = workbook.createFont();
             headerFont.setBold(true);
             headerFont.setFontHeightInPoints((short) 12);
             headerFont.setColor(IndexedColors.WHITE.getIndex());
             headerStyle.setFont(headerFont);
 
-            headerStyle.setFillForegroundColor(new XSSFColor(new byte[]{(byte) 47, (byte) 84, (byte) 150}, null));
+            headerStyle.setFillForegroundColor(new XSSFColor(new byte[]{47, 84, (byte) 150}, null));
             headerStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
 
             headerStyle.setAlignment(HorizontalAlignment.CENTER);
@@ -43,7 +43,7 @@ public class Main {
             bodyStyle.setVerticalAlignment(VerticalAlignment.CENTER);
             setBorders(bodyStyle);
 
-            XSSFCellStyle evenRowsCellStyle = (XSSFCellStyle) workbook.createCellStyle();
+            CellStyle evenRowsCellStyle = workbook.createCellStyle();
             evenRowsCellStyle.cloneStyleFrom(bodyStyle);
             evenRowsCellStyle.setFillForegroundColor(new XSSFColor(new byte[]{(byte) 220, (byte) 230, (byte) 241}, null));
             evenRowsCellStyle.setFillPattern(FillPatternType.SOLID_FOREGROUND);
@@ -90,6 +90,8 @@ public class Main {
             sheet.createFreezePane(0, 1);
 
             workbook.write(outputStream);
+        } catch (IOException e) {
+            System.out.println("Ошибка при работе с файлом: " + e.getMessage());
         }
     }
 
@@ -98,6 +100,7 @@ public class Main {
         style.setBorderBottom(BorderStyle.THIN);
         style.setBorderLeft(BorderStyle.THIN);
         style.setBorderRight(BorderStyle.THIN);
+
         style.setTopBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
         style.setBottomBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
         style.setLeftBorderColor(IndexedColors.GREY_50_PERCENT.getIndex());
