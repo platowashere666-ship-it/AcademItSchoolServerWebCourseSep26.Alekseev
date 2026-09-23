@@ -1,12 +1,12 @@
 package academits.ru.countries;
 
-import tools.jackson.databind.JsonNode;
+import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.node.ArrayNode;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -14,44 +14,42 @@ public class Main {
     public static void main(String[] args) {
         try (InputStream inputStream = Main.class.getResourceAsStream("/countries.json")) {
             if (inputStream == null) {
-                throw new IOException("Файл countries.json не найден");
+                System.out.println("Файл countries.json не найден");
+                return;
             }
 
             ObjectMapper mapper = new ObjectMapper();
 
-            ArrayNode countries = (ArrayNode) mapper.readTree(inputStream);
+            List<Country> countries = mapper.readValue(
+                    inputStream,
+                    new TypeReference<>() {
+                    }
+            );
 
-            long totalPopulation = 0;
-
-            for (JsonNode country : countries) {
-                totalPopulation += country.get("population").asLong();
-            }
+            long totalPopulation = countries.stream()
+                    .mapToLong(Country::getPopulation)
+                    .sum();
 
             System.out.println("Суммарная численность населения по странам: " + totalPopulation);
 
             Map<String, String> uniqueCurrencies = new TreeMap<>();
 
-            for (JsonNode country : countries) {
-                JsonNode currencies = country.get("currencies");
+            for (Country country : countries) {
+                List<Currency> currencies = country.getCurrencies();
 
-                if (currencies != null) {
-                    for (JsonNode currency : currencies) {
-                        JsonNode code = currency.get("code");
-                        JsonNode name = currency.get("name");
+                if (currencies == null) {
+                    continue;
+                }
 
-                        if (code == null || code.isNull() || name == null || name.isNull()) {
-                            continue;
-                        }
+                for (Currency currency : currencies) {
+                    String code = currency.getCode();
+                    String name = currency.getName();
 
-                        String codeValue = code.stringValue();
-                        String nameValue = name.stringValue();
-
-                        if (codeValue.isBlank() || codeValue.equals("(none)") || nameValue.isBlank()) {
-                            continue;
-                        }
-
-                        uniqueCurrencies.putIfAbsent(codeValue, nameValue);
+                    if (code == null || code.isBlank() || code.equals("(none)") || name == null || name.isBlank()) {
+                        continue;
                     }
+
+                    uniqueCurrencies.putIfAbsent(code, name);
                 }
             }
 
@@ -59,13 +57,9 @@ public class Main {
             uniqueCurrencies.forEach((code, name) ->
                     System.out.println(code + " - " + name));
 
-            ArrayNode bigCountries = mapper.createArrayNode();
-
-            for (JsonNode country : countries) {
-                if (country.get("population").asLong() >= 1000000) {
-                    bigCountries.add(country);
-                }
-            }
+            List<Country> bigCountries = countries.stream()
+                    .filter(c -> c.getPopulation() >= 1000000)
+                    .toList();
 
             mapper.writeValue(new File("result.json"), bigCountries);
         } catch (IOException e) {
