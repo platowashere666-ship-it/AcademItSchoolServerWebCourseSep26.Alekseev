@@ -1,5 +1,7 @@
 package academits.ru.countries;
 
+import academits.ru.countries.data.Country;
+import academits.ru.countries.data.Currency;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 
@@ -7,8 +9,8 @@ import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
-import java.util.Map;
-import java.util.TreeMap;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
@@ -32,30 +34,22 @@ public class Main {
 
             System.out.println("Суммарная численность населения по странам: " + totalPopulation);
 
-            Map<String, String> uniqueCurrencies = new TreeMap<>();
-
-            for (Country country : countries) {
-                List<Currency> currencies = country.getCurrencies();
-
-                if (currencies == null) {
-                    continue;
-                }
-
-                for (Currency currency : currencies) {
-                    String code = currency.getCode();
-                    String name = currency.getName();
-
-                    if (code == null || code.isBlank() || code.equals("(none)") || name == null || name.isBlank()) {
-                        continue;
-                    }
-
-                    uniqueCurrencies.putIfAbsent(code, name);
-                }
-            }
+            List<Currency> uniqueCurrencies = countries.stream()
+                    .map(Country::getCurrencies)
+                    .filter(Objects::nonNull)
+                    .flatMap(List::stream)
+                    .collect(Collectors.toMap(
+                            Currency::getCode,
+                            currency -> currency,
+                            (existing, replacement) -> existing
+                    ))
+                    .values()
+                    .stream()
+                    .toList();
 
             System.out.println("Перечень уникальных валют из файла:");
-            uniqueCurrencies.forEach((code, name) ->
-                    System.out.println(code + " - " + name));
+            uniqueCurrencies.forEach(currency ->
+                    System.out.println(currency.getCode() + " - " + currency.getName()));
 
             List<Country> bigCountries = countries.stream()
                     .filter(c -> c.getPopulation() >= 1000000)
