@@ -10,7 +10,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 public class Main {
     public static void main(String[] args) {
@@ -38,13 +37,7 @@ public class Main {
                     .map(Country::getCurrencies)
                     .filter(Objects::nonNull)
                     .flatMap(List::stream)
-                    .collect(Collectors.toMap(
-                            Currency::getCode,
-                            currency -> currency,
-                            (existing, replacement) -> existing
-                    ))
-                    .values()
-                    .stream()
+                    .distinct()
                     .toList();
 
             System.out.println("Перечень уникальных валют из файла:");
