@@ -43,11 +43,18 @@ public class Currency {
 
         Currency currency = (Currency) o;
 
-        return Objects.equals(code, currency.code);
+        return code.equals(currency.code) && name.equals(currency.name) && symbol.equals(currency.symbol);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(code);
+        final int prime = 37;
+        int hash = 1;
+
+        hash = prime * hash + Objects.hashCode(code);
+        hash = prime * hash + Objects.hashCode(name);
+        hash = prime * hash + Objects.hashCode(symbol);
+
+        return hash;
     }
 }
